@@ -1,5 +1,5 @@
-import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone'
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -17,19 +17,20 @@ const typeDefs = `#graphql
   type Mutation {
     addBook(title: String!, author: String!): Book
     deleteBook(id:Int!): Book
+    updateBook(id:Int!,title: String!, author: String!): Book
   }
 `;
 
 let books = [
   {
     id: 1,
-    title: 'Rich Dad poor Dad',
-    author: 'Robert Kiyosaki',
+    title: "Rich Dad poor Dad",
+    author: "Robert Kiyosaki",
   },
   {
     id: 2,
-    title: 'Art of negotiations',
-    author: 'Michael Wheeler',
+    title: "Art of negotiations",
+    author: "Michael Wheeler",
   },
 ];
 
@@ -38,28 +39,47 @@ let books = [
 
 const resolvers = {
   Query: {
+    //get all books
     books: () => books,
-    book:(_:any, args:any,)=> {
-      return books.find((book)=>book.id === args.id)
+    //get single book
+    book: (_: any, args: any) => {
+      return books.find((book) => book.id === args.id);
     },
   },
-  Mutation:{
+  Mutation: {
     addBook: (_, { title, author }) => {
-      let book = { id:books.length+1,title, author}
-       books.push(book)
-       return book
+      let book = { id: books.length + 1, title, author };
+      books.push(book);
+      return book;
+    },
+    deleteBook: (_, { id }) => {
+      let bookIndex = books.findIndex((book) => book.id === id);
+      if (bookIndex >= 0) {
+        let bookToBeDeleted = books[bookIndex];
+        books = books.filter((book) => book.id !== id);
+        return bookToBeDeleted;
+      } else {
+        return null;
+      }
+    },
+    updateBook: (_, { id, title, author }) => {
+      let bookIndex = books.findIndex((book) => book.id === id);
+      if (bookIndex >= 0) {
+        books[bookIndex] = {
+          id,
+          title,
+          author,
+        };
+        return {
+          id,
+          title,
+          author,
+        };
+      } else {
+        return null;
+      }
+    },
   },
-  deleteBook: (_, { id }) => {
-    let bookIndex = books.findIndex((book)=>book.id === id)
-    if(bookIndex >=0){
-      let bookToBeDeleted = books[bookIndex]
-      books = books.filter((book)=>book.id !== id)
-      return bookToBeDeleted
-    }else{
-      return null
-    }
-}
-}
 };
 
 // The ApolloServer constructor requires two parameters: your schema
